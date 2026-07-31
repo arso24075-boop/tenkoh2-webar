@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <!-- 展示用UIのセーフエリア(env())を有効にするために追加。カメラ/video/canvas/a-sceneの設定には影響しない -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>診断用：カスタムマーカー最小構成</title>
+  <title>診断用：てんこう2 GLBモデル確認</title>
   <!-- bodyのみ最小限のリセット。video/canvas/a-sceneへの独自スタイルは一切当てない -->
   <style>
     body {
@@ -12,8 +12,7 @@
       overflow: hidden;
     }
 
-    /* GLBモデル読み込み失敗時の小さな通知。既存のARステータス表示（画面下部中央）とは
-       重ならない位置に配置し、AR画面UIのCSS（css/ar-ui.css）は変更しない */
+    /* このテストページだけで使う、モデル読み込みエラー表示（AR画面UIのCSSは変更しない） */
     #model-error-message {
       display: none;
       position: fixed;
@@ -28,6 +27,25 @@
       z-index: 99999;
       pointer-events: none;
       white-space: nowrap;
+    }
+
+    /* ?modelDebug=1のときだけ表示する確認パネル（画面左下、マーカー中央を覆わない） */
+    #model-debug-panel {
+      display: none;
+      position: fixed;
+      left: 12px;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+      max-width: 260px;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      font-family: monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      padding: 8px 10px;
+      border-radius: 8px;
+      z-index: 99999;
+      pointer-events: none;
+      white-space: pre-wrap;
     }
   </style>
 
@@ -183,33 +201,66 @@
     </div>
   </div>
 
-  <!-- GLBモデル読み込み失敗時の小さな通知（既存のARステータス表示とは別要素） -->
+  <!-- このテストページだけのモデル読み込みエラー表示・確認パネル -->
   <div id="model-error-message">3Dモデルを読み込めませんでした</div>
+  <div id="model-debug-panel"></div>
 
   <script src="./js/spawn.js"></script>
   <script src="./js/ar-ui.js"></script>
-  <!-- てんこう2 GLBモデルの表示切り替え（model-loaded/model-error）。ar-model-test.htmlで
-       動作確認済みの処理から、デバッグパネル等のテスト専用部分を除いて移植したもの -->
+  <!-- GLBモデルの表示切り替え・読み込みログ・エラー表示・確認パネル制御（このテストページ専用） -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var modelEl = document.querySelector('#satellite-model');
       var errorMessageEl = document.querySelector('#model-error-message');
+      var debugPanelEl = document.querySelector('#model-debug-panel');
+      var positionEl = document.querySelector('#satellite-position');
+
+      var params = new URLSearchParams(window.location.search);
+      var isModelDebugEnabled = params.get('modelDebug') === '1';
 
       if (!modelEl) {
-        console.error('ar: #satellite-modelが見つかりません');
+        console.error('ar-model-test: #satellite-modelが見つかりません');
         return;
+      }
+
+      function updateDebugPanel(status) {
+        if (!isModelDebugEnabled || !debugPanelEl) {
+          return;
+        }
+        var positionAttr = positionEl ? positionEl.getAttribute('position') : null;
+        var positionY = positionAttr ? positionAttr.y : 'unsupported';
+        debugPanelEl.textContent =
+          'Model status: ' + status + '\n' +
+          'scale: 6.666667 6.666667 6.666667\n' +
+          'position: 0 0 0\n' +
+          'rotation: 0 0 0\n' +
+          'satellite-position y: ' + positionY + '\n' +
+          'GLB path: ./assets/models/tenkoh2.glb';
+      }
+
+      if (isModelDebugEnabled && debugPanelEl) {
+        debugPanelEl.style.display = 'block';
+        updateDebugPanel('loading...');
       }
 
       modelEl.addEventListener('model-loaded', function () {
         modelEl.setAttribute('visible', 'true');
-        console.log('ar: てんこう2モデルの読み込みに成功しました');
+        var scale = modelEl.getAttribute('scale');
+        var position = modelEl.getAttribute('position');
+        var rotation = modelEl.getAttribute('rotation');
+        console.log('ar-model-test: モデル読み込み成功');
+        console.log('ar-model-test: satellite-model scale =', scale);
+        console.log('ar-model-test: satellite-model position =', position);
+        console.log('ar-model-test: satellite-model rotation =', rotation);
+        updateDebugPanel('loaded');
       });
 
       modelEl.addEventListener('model-error', function (evt) {
-        console.error('ar: てんこう2モデルの読み込みに失敗しました', evt.detail);
+        console.error('ar-model-test: モデルの読み込みに失敗しました', evt.detail);
         if (errorMessageEl) {
           errorMessageEl.style.display = 'block';
         }
+        updateDebugPanel('error');
       });
     });
   </script>

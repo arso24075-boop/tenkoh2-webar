@@ -11,24 +11,6 @@
       margin: 0;
       overflow: hidden;
     }
-
-    /* GLBモデル読み込み失敗時の小さな通知。既存のARステータス表示（画面下部中央）とは
-       重ならない位置に配置し、AR画面UIのCSS（css/ar-ui.css）は変更しない */
-    #model-error-message {
-      display: none;
-      position: fixed;
-      top: calc(env(safe-area-inset-top, 0px) + 70px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(120, 20, 20, 0.85);
-      color: #fff;
-      font-size: 12px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      z-index: 99999;
-      pointer-events: none;
-      white-space: nowrap;
-    }
   </style>
 
   <!-- A-Frame 1.6.0 -->
@@ -45,10 +27,6 @@
     vr-mode-ui="enabled: false"
     arjs="sourceType: webcam; debugUIEnabled: false;"
   >
-    <a-assets>
-      <a-asset-item id="tenkoh2-model-asset" src="./assets/models/tenkoh2.glb"></a-asset-item>
-    </a-assets>
-
     <!-- カスタムマーカー（pattern形式、実寸15cm、patternRatioは0.5で診断） -->
     <a-marker
       id="debug-custom-marker"
@@ -64,16 +42,13 @@
         実寸をマーカー幅1.0単位に対する比率で指定する。
         換算：30cm=2.0 / 20cm=1.333333 / 10cm=0.666667 / 5cm=0.333333
 
-        出現・位置・回転・傾きは親要素で分担して管理し、モデル自身には持たせない。
+        出現・位置・回転・傾きは親要素で分担して管理し、箱自身には持たせない。
         satellite-spawn    …出現時の拡大（0.85→1、markerFoundで再生、
                               js/spawn.jsが起点。短い追跡切れでは再生しない）
         satellite-position …高さと上昇（0.84→0.90。0.90は20度傾けても底面と
                               カード面の間に約5cm以上の隙間が残る高さ）
         satellite-spinner  …マーカー面に垂直なY軸まわりの回転（20秒で1周）
         satellite-tilt     …固定された傾き（アニメーションさせない）
-        satellite-model    …てんこう2のGLBモデル（初期visible=falseで
-                              model-loaded後に表示。scaleはBlender実寸30cmを
-                              AR unit 2.0にするため6.666667を使用）
       -->
       <a-entity
         id="satellite-spawn"
@@ -90,14 +65,16 @@
             animation="property: rotation; from: 0 0 0; to: 0 360 0; dur: 20000; easing: linear; loop: true"
           >
             <a-entity id="satellite-tilt" rotation="20 0 0">
-              <a-entity
-                id="satellite-model"
-                gltf-model="#tenkoh2-model-asset"
-                scale="6.666667 6.666667 6.666667"
+              <a-box
+                id="satellite-placeholder"
+                width="2"
+                height="0.666667"
+                depth="1.333333"
                 position="0 0 0"
                 rotation="0 0 0"
-                visible="false"
-              ></a-entity>
+                scale="1 1 1"
+                color="#808080"
+              ></a-box>
             </a-entity>
           </a-entity>
         </a-entity>
@@ -183,35 +160,7 @@
     </div>
   </div>
 
-  <!-- GLBモデル読み込み失敗時の小さな通知（既存のARステータス表示とは別要素） -->
-  <div id="model-error-message">3Dモデルを読み込めませんでした</div>
-
   <script src="./js/spawn.js"></script>
   <script src="./js/ar-ui.js"></script>
-  <!-- てんこう2 GLBモデルの表示切り替え（model-loaded/model-error）。ar-model-test.htmlで
-       動作確認済みの処理から、デバッグパネル等のテスト専用部分を除いて移植したもの -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var modelEl = document.querySelector('#satellite-model');
-      var errorMessageEl = document.querySelector('#model-error-message');
-
-      if (!modelEl) {
-        console.error('ar: #satellite-modelが見つかりません');
-        return;
-      }
-
-      modelEl.addEventListener('model-loaded', function () {
-        modelEl.setAttribute('visible', 'true');
-        console.log('ar: てんこう2モデルの読み込みに成功しました');
-      });
-
-      modelEl.addEventListener('model-error', function (evt) {
-        console.error('ar: てんこう2モデルの読み込みに失敗しました', evt.detail);
-        if (errorMessageEl) {
-          errorMessageEl.style.display = 'block';
-        }
-      });
-    });
-  </script>
 </body>
 </html>
