@@ -1,0 +1,238 @@
+/*
+  展示用AR画面のオーバーレイUI。
+  video / canvas / a-scene には一切スタイルを与えない（width/height/object-fit/transform禁止）。
+  トップ画面（css/landing.css）の色・角丸の印象に合わせている。
+*/
+
+:root {
+  --ar-ui-font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+  --ar-ui-panel-bg: rgba(7, 20, 39, 0.82);
+  --ar-ui-panel-bg-strong: rgba(7, 20, 39, 0.92);
+  --ar-ui-accent-top: #7392a5;
+  --ar-ui-accent-bottom: #4d6b80;
+  --ar-ui-radius-sm: 14px;
+  --ar-ui-radius-lg: 16px;
+  --ar-ui-fade-duration: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ar-ui-fade-duration: 1ms;
+  }
+}
+
+@keyframes ar-ui-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* UIコンテナ本体。全画面に重ねるが、クリックはボタン等の子要素だけに許可する */
+#ar-ui {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  font-family: var(--ar-ui-font);
+  color: #fff;
+}
+
+/* 左上「戻る」・右上「？」共通スタイル */
+.ar-icon-button {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  min-width: 44px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--ar-ui-radius-sm);
+  background: var(--ar-ui-panel-bg);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.ar-icon-button:hover {
+  background: var(--ar-ui-panel-bg-strong);
+}
+
+.ar-icon-button:active {
+  transform: scale(0.96);
+}
+
+.ar-icon-button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+.ar-icon-button--back {
+  left: calc(env(safe-area-inset-left, 0px) + 16px);
+}
+
+.ar-icon-button--help {
+  right: calc(env(safe-area-inset-right, 0px) + 16px);
+  width: 44px;
+  padding: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* 画面下部中央のステータスパネル */
+.ar-status {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  transform: translateX(-50%);
+  width: calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 48px);
+  max-width: 360px;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border-radius: var(--ar-ui-radius-sm);
+  background: var(--ar-ui-panel-bg);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  text-align: center;
+  pointer-events: none;
+}
+
+.ar-status__primary {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.ar-status__secondary {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  opacity: 0.85;
+  white-space: pre-line;
+}
+
+.ar-status__secondary:empty {
+  display: none;
+  margin: 0;
+}
+
+/* 「実寸大 1:1」のような補助バッジ */
+.ar-status__badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  opacity: 1;
+}
+
+.ar-fade {
+  animation: ar-ui-fade-in var(--ar-ui-fade-duration) ease;
+}
+
+/* モーダル共通（使い方 / エラー） */
+.ar-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+.ar-modal[hidden] {
+  display: none;
+}
+
+.ar-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 8, 18, 0.6);
+}
+
+.ar-modal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  max-height: calc(100% - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 24px;
+  border-radius: var(--ar-ui-radius-lg);
+  background: var(--ar-ui-panel-bg-strong);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  text-align: center;
+}
+
+.ar-modal__title {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.ar-modal__body {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.ar-modal__body:last-of-type {
+  margin-bottom: 0;
+}
+
+.ar-modal__note {
+  margin: 16px 0 0;
+  font-size: 12px;
+  line-height: 1.8;
+  opacity: 0.85;
+}
+
+.ar-modal__close {
+  margin-top: 20px;
+  width: 100%;
+  min-height: 44px;
+  border: none;
+  border-radius: var(--ar-ui-radius-sm);
+  background: linear-gradient(180deg, var(--ar-ui-accent-top) 0%, var(--ar-ui-accent-bottom) 100%);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 150ms ease, transform 150ms ease;
+}
+
+.ar-modal__close:hover {
+  filter: brightness(1.08);
+}
+
+.ar-modal__close:active {
+  transform: translateY(1px);
+}
+
+.ar-modal__close:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
