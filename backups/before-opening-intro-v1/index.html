@@ -6,22 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>てんこう2 WebAR</title>
   <link rel="stylesheet" href="./css/landing.css">
-  <!-- Web起動時のオープニング画面専用CSS（index.htmlのみ） -->
-  <link rel="stylesheet" href="./css/opening-intro.css">
 </head>
 <body>
-  <!--
-    Web起動時のオープニング画面。読み込み直後のフラッシュを防ぐため、
-    JavaScriptで後から生成せず最初からHTMLに記述している。
-    トップ画面はこの下に常に存在し、display:noneにはしない（オープニングを上に重ねるだけ）。
-  -->
-  <div id="opening-intro" aria-label="オープニングメッセージ">
-    <p id="opening-intro-text">
-      <span id="opening-intro-chars" class="opening-intro-chars" aria-hidden="true"></span>
-    </p>
-    <span class="opening-intro-visually-hidden">さあ、未来を実行しよう。</span>
-  </div>
-
   <!-- AR起動前のトップ画面。A-Frame/AR.js/カメラは一切読み込まない -->
   <div class="landing">
     <header class="landing__header">
@@ -64,8 +50,5 @@
       >
     </footer>
   </div>
-
-  <!-- Web起動時のオープニング画面専用JavaScript（index.htmlのみ） -->
-  <script src="./js/opening-intro.js"></script>
 </body>
 </html>
