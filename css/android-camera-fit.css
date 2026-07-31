@@ -1,0 +1,74 @@
+/*
+  Androidでカメラ映像がズームして見える問題を調査する
+  contain方式テスト用CSS（ar-camera-fit-test.htmlでのみ読み込む）。
+  video/canvasの実際の位置・サイズはjs/android-camera-fit.jsが
+  JavaScriptから直接styleへ設定するため、ここでは基本的に扱わない。
+  本番のcss/ar-ui.css・css/style.css等には一切影響しない。
+*/
+
+/* fit=containを実際に適用している間だけ、余白部分にトップ画面と同系統の
+   濃紺背景を敷く（fit=currentのときは何も変えない） */
+body.android-camera-fit--active {
+  background: #071427;
+}
+
+/* fitDebug=1のときだけ、videoとA-Frame表示Canvasの範囲を細い枠線で可視化する。
+   要素サイズに影響しないoutlineを使用し、borderは使用しない。 */
+.android-camera-fit-debug-video {
+  outline: 1px solid #3aa0ff;
+}
+
+.android-camera-fit-debug-canvas {
+  outline: 1px solid #ffd23a;
+}
+
+/* デバッグパネル（画面上部左・マーカー中央を覆わない位置） */
+#android-camera-fit-debug-panel {
+  position: fixed;
+  left: 12px;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  width: min(300px, calc(100vw - 24px));
+  max-height: 55vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-family: monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  border-radius: 10px;
+  padding: 10px;
+  z-index: 99999;
+  pointer-events: auto;
+}
+
+#android-camera-fit-debug-panel h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+}
+
+#android-camera-fit-debug-panel pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 6px 0;
+  max-height: 32vh;
+  overflow-y: auto;
+}
+
+#android-camera-fit-debug-panel textarea {
+  width: 100%;
+  box-sizing: border-box;
+  height: 90px;
+  font-family: monospace;
+  font-size: 10px;
+}
+
+#android-camera-fit-debug-panel button {
+  margin: 4px 4px 0 0;
+  padding: 6px 10px;
+  font-size: 11px;
+  border: none;
+  border-radius: 6px;
+  background: #4d6b80;
+  color: #fff;
+}

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <!-- 展示用UIのセーフエリア(env())を有効にするために追加。カメラ/video/canvas/a-sceneの設定には影響しない -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>診断用：Androidカメラcontain表示テスト</title>
+  <!-- bodyのみ最小限のリセット。video/canvas/a-sceneへの独自スタイルは一切当てない -->
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
+
+  <!-- A-Frame 1.6.0 -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <!-- AR.js 3.4.8（マーカートラッキング版） -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
+  <!-- 展示用AR画面UI（video/canvas/a-sceneには適用しない） -->
+  <link rel="stylesheet" href="./css/ar-ui.css">
+  <!-- Androidカメラcontain表示テスト用CSS。このテストページでのみ読み込む -->
+  <link rel="stylesheet" href="./css/android-camera-fit.css">
+</head>
+<body>
+  <!-- debug-hiro.htmlと同じ最小構成で、マーカーだけカスタムパターンに変更 -->
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+  >
+    <!-- カスタムマーカー（pattern形式、実寸15cm、patternRatioは0.5で診断） -->
+    <a-marker
+      id="debug-custom-marker"
+      type="pattern"
+      url="./assets/markers/tenkoh2-marker.patt"
+      size="0.15"
+      patternRatio="0.5"
+      emitevents="true"
+    >
+      <!--
+        AR.js 3.4.8のA-Frame実装ではa-markerのsize="0.15"が
+        markerParametersへ反映されず、マーカー幅が1単位として扱われるため、
+        実寸をマーカー幅1.0単位に対する比率で指定する。
+        換算：30cm=2.0 / 20cm=1.333333 / 10cm=0.666667 / 5cm=0.333333
+
+        出現・位置・回転・傾きは親要素で分担して管理し、箱自身には持たせない。
+        satellite-spawn    …出現時の拡大（0.85→1、markerFoundで再生、
+                              js/spawn.jsが起点。短い追跡切れでは再生しない）
+        satellite-position …高さと上昇（0.84→0.90。0.90は20度傾けても底面と
+                              カード面の間に約5cm以上の隙間が残る高さ）
+        satellite-spinner  …マーカー面に垂直なY軸まわりの回転（20秒で1周）
+        satellite-tilt     …固定された傾き（アニメーションさせない）
+      -->
+      <a-entity
+        id="satellite-spawn"
+        scale="0.85 0.85 0.85"
+        animation="property: scale; from: 0.85 0.85 0.85; to: 1 1 1; dur: 450; easing: easeOutCubic; startEvents: spawnSatellite"
+      >
+        <a-entity
+          id="satellite-position"
+          position="0 0.84 0"
+          animation="property: position; from: 0 0.84 0; to: 0 0.90 0; dur: 550; easing: easeOutCubic; startEvents: riseSatellite"
+        >
+          <a-entity
+            id="satellite-spinner"
+            animation="property: rotation; from: 0 0 0; to: 0 360 0; dur: 20000; easing: linear; loop: true"
+          >
+            <a-entity id="satellite-tilt" rotation="20 0 0">
+              <a-box
+                id="satellite-placeholder"
+                width="2"
+                height="0.666667"
+                depth="1.333333"
+                position="0 0 0"
+                rotation="0 0 0"
+                scale="1 1 1"
+                color="#808080"
+              ></a-box>
+            </a-entity>
+          </a-entity>
+        </a-entity>
+      </a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <!--
+    展示用AR画面UI。a-scene/video/canvasの外側に置く通常のHTML要素。
+    #ar-uiはpointer-events:noneで、ボタンやモーダルなど個々の要素だけクリック可能にする。
+  -->
+  <div id="ar-ui">
+    <a
+      id="ar-back-button"
+      class="ar-icon-button ar-icon-button--back"
+      href="./index.html"
+      aria-label="トップ画面へ戻る"
+    >‹ 戻る</a>
+
+    <button
+      type="button"
+      id="ar-help-button"
+      class="ar-icon-button ar-icon-button--help"
+      aria-label="使い方を開く"
+      aria-haspopup="dialog"
+      aria-controls="ar-help-modal"
+    >？</button>
+
+    <div id="ar-status" class="ar-status" aria-live="polite">
+      <p class="ar-status__primary" id="ar-status-primary">ARを準備しています</p>
+      <p class="ar-status__secondary" id="ar-status-secondary">カメラの使用を許可してください</p>
+    </div>
+
+    <!-- 使い方モーダル -->
+    <div
+      id="ar-help-modal"
+      class="ar-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ar-help-title"
+      hidden
+    >
+      <div class="ar-modal__backdrop" id="ar-help-backdrop"></div>
+      <div class="ar-modal__panel">
+        <h2 class="ar-modal__title" id="ar-help-title">使い方</h2>
+        <p class="ar-modal__body ar-modal__body--steps">
+          1. マーカーにスマートフォンのカメラを向ける<br>
+          2. 黒い枠全体が画面に入るよう、スマートフォンの位置を調整する<br>
+          3. 衛星が表示されたら、スマートフォンをゆっくり動かして観察する
+        </p>
+        <p class="ar-modal__note">
+          黒い枠の上に手や物を置かないでください。<br>
+          周囲を確認しながらスマートフォンを動かしてください。
+        </p>
+        <button type="button" class="ar-modal__close" id="ar-help-close">閉じる</button>
+      </div>
+    </div>
+
+    <!-- カメラエラー表示 -->
+    <div
+      id="ar-error"
+      class="ar-modal ar-modal--error"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ar-error-title"
+      hidden
+    >
+      <div class="ar-modal__backdrop"></div>
+      <div class="ar-modal__panel">
+        <h2 class="ar-modal__title" id="ar-error-title">カメラを使用できません</h2>
+        <p class="ar-modal__body">
+          この作品を体験するには、<br>
+          カメラの使用許可が必要です。
+        </p>
+        <p class="ar-modal__body">
+          ブラウザの設定からカメラを許可し、<br>
+          ページを再読み込みしてください。
+        </p>
+        <button type="button" class="ar-modal__close" id="ar-retry-button">もう一度試す</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./js/spawn.js"></script>
+  <script src="./js/ar-ui.js"></script>
+  <!-- Androidカメラcontain表示テスト用スクリプト。このテストページでのみ読み込む -->
+  <script src="./js/android-camera-fit.js"></script>
+</body>
+</html>
