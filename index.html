@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport-fit=coverでiPhoneのセーフエリア（ノッチ/ホームインジケーター）に対応する -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>てんこう2 WebAR</title>
+  <link rel="stylesheet" href="./css/landing.css">
+</head>
+<body>
+  <!-- AR起動前のトップ画面。A-Frame/AR.js/カメラは一切読み込まない -->
+  <div class="landing">
+    <header class="landing__header">
+      <img
+        class="landing__title-logo"
+        src="./assets/images/tenkoh2-logo.svg"
+        alt="てんこう2"
+      >
+      <p class="landing__subtitle">てんこう2 WebAR</p>
+    </header>
+
+    <p class="landing__description">
+      専用マークをカメラに映すと、<br>
+      実寸大の超小型人工衛星「てんこう2」が出現します。
+    </p>
+
+    <div class="landing__cta">
+      <!-- 単純なページ遷移のみのため、JavaScriptを使わずa要素で./ar.htmlへ移動する -->
+      <a class="landing__button" href="./ar.html">ARを起動する</a>
+      <p class="landing__notice">明るい場所で、黒い枠を隠さずに映してください。</p>
+    </div>
+
+    <p class="landing__slogan">さあ、未来を実行しよう。</p>
+
+    <footer class="landing__footer">
+      <img
+        class="landing__logo"
+        src="./assets/images/cosmic-campus-logo.svg"
+        alt="N.U Cosmic Campus"
+      >
+      <img
+        class="landing__logo"
+        src="./assets/images/cst-logo.svg"
+        alt="日本大学理工学部"
+      >
+      <img
+        class="landing__logo"
+        src="./assets/images/art-logo.svg"
+        alt="日本大学芸術学部"
+      >
+    </footer>
+  </div>
+</body>
+</html>

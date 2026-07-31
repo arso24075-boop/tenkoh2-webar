@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>診断用：Hiroマーカー最小構成</title>
+  <!-- bodyのみ最小限のリセット。video/canvas/a-sceneへの独自スタイルは一切当てない -->
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
+
+  <!-- A-Frame 1.6.0 -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <!-- AR.js 3.4.8（マーカートラッキング版） -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
+</head>
+<body>
+  <!-- AR.js公式のマーカー型最小構成に近いHiroマーカー診断ページ -->
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+  >
+    <!-- 標準のHiroマーカー（presetを使うため画像やpattファイル指定は不要） -->
+    <a-marker preset="hiro">
+      <a-box width="1" height="1" depth="1" position="0 0.5 0" color="red"></a-box>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# macOSが自動生成するファイル
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windowsが自動生成するファイル
+Thumbs.db
+ehthumbs.db
+
+# エディタが生成する一時ファイル
+*.swp
+*.swo
+*~
+
+# OSのゴミ箱情報など
+.Trashes

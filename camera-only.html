@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>診断用：カメラ単体テスト（AR.js/A-Frame不使用）</title>
+  <!-- CSS・外部JavaScriptは一切読み込まない -->
+</head>
+<body>
+  <!-- 状態表示用のテキスト。widthやobject-fit等のCSSは指定せず、videoの自然なサイズのまま表示する -->
+  <p id="status">カメラにアクセスしています…</p>
+  <video id="camera-video" autoplay muted playsinline></video>
+
+  <script>
+    // AR.js/A-Frameを使わず、ブラウザ標準のgetUserMediaのみでカメラ映像を取得する最小テスト
+    (function () {
+      var statusEl = document.getElementById('status');
+      var videoEl = document.getElementById('camera-video');
+
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false
+      }).then(function (stream) {
+        // 取得したMediaStreamをそのままvideo.srcObjectへ設定する（停止処理は行わない）
+        videoEl.srcObject = stream;
+        statusEl.textContent = 'カメラ単体テスト：正常';
+        console.log('camera-only: getUserMediaに成功しました', stream);
+      }).catch(function (err) {
+        statusEl.textContent = 'エラー：' + err.name + ' - ' + err.message;
+        console.error('camera-only: getUserMediaに失敗しました', err);
+      });
+    })();
+  </script>
+</body>
+</html>

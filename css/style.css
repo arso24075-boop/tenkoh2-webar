@@ -1,0 +1,42 @@
+/* ページ全体をカメラ映像で覆うための基本設定 */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+a-scene {
+  width: 100%;
+  height: 100%;
+}
+
+/*
+  video、canvasのサイズ・位置・変形はAR.jsが実際のカメラ解像度と
+  画面サイズから計算して自動で設定するため、ここでは一切指定しない
+  （width/height/object-fit/transform/scaleを指定しない）。
+*/
+
+/* 画面下部の案内テキスト */
+#guide-text {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 24px;
+  margin: 0 auto;
+  width: 90%;
+  max-width: 480px;
+  padding: 10px 16px;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  z-index: 999;
+  pointer-events: none;
+}

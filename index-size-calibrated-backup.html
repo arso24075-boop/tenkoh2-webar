@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>診断用：カスタムマーカー最小構成</title>
+  <!-- bodyのみ最小限のリセット。video/canvas/a-sceneへの独自スタイルは一切当てない -->
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
+
+  <!-- A-Frame 1.6.0 -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <!-- AR.js 3.4.8（マーカートラッキング版） -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
+</head>
+<body>
+  <!-- debug-hiro.htmlと同じ最小構成で、マーカーだけカスタムパターンに変更 -->
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+  >
+    <!-- カスタムマーカー（pattern形式、実寸15cm、patternRatioは0.5で診断） -->
+    <a-marker
+      id="debug-custom-marker"
+      type="pattern"
+      url="./assets/markers/tenkoh2-marker.patt"
+      size="0.15"
+      patternRatio="0.5"
+      emitevents="true"
+    >
+      <!--
+        AR.js 3.4.8のA-Frame実装ではa-markerのsize="0.15"が
+        markerParametersへ反映されず、マーカー幅が1単位として扱われるため、
+        実寸をマーカー幅1.0単位に対する比率で指定する。
+        換算：30cm=2.0 / 20cm=1.333333 / 10cm=0.666667 / 5cm=0.333333
+        position: マーカー面から底まで5cm(0.333333) + 高さの半分0.333333 = 0.666667
+      -->
+      <a-box
+        width="2"
+        height="0.666667"
+        depth="1.333333"
+        position="0 0.666667 0"
+        rotation="0 0 0"
+        scale="1 1 1"
+        color="#808080"
+      ></a-box>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <!-- 診断用：markerFound/markerLostをコンソールに出力するだけ。video/canvas操作やリロードは行わない -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var marker = document.querySelector('#debug-custom-marker');
+      if (!marker) {
+        console.log('診断: マーカー要素が見つかりません');
+        return;
+      }
+      marker.addEventListener('markerFound', function () {
+        console.log('診断: markerFound（カスタムマーカーを検出）');
+      });
+      marker.addEventListener('markerLost', function () {
+        console.log('診断: markerLost（カスタムマーカーを見失った）');
+      });
+    });
+  </script>
+</body>
+</html>

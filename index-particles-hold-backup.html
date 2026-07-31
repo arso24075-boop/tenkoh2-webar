@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>診断用：カスタムマーカー最小構成</title>
+  <!-- bodyのみ最小限のリセット。video/canvas/a-sceneへの独自スタイルは一切当てない -->
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
+
+  <!-- A-Frame 1.6.0 -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <!-- AR.js 3.4.8（マーカートラッキング版） -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
+  <!-- カスタムコンポーネント（particle-convergence）。a-marker内で使用するため要素のパース前に登録する -->
+  <script src="./js/particle-effect.js"></script>
+</head>
+<body>
+  <!-- debug-hiro.htmlと同じ最小構成で、マーカーだけカスタムパターンに変更 -->
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+  >
+    <!-- カスタムマーカー（pattern形式、実寸15cm、patternRatioは0.5で診断） -->
+    <a-marker
+      id="debug-custom-marker"
+      type="pattern"
+      url="./assets/markers/tenkoh2-marker.patt"
+      size="0.15"
+      patternRatio="0.5"
+      emitevents="true"
+    >
+      <!--
+        AR.js 3.4.8のA-Frame実装ではa-markerのsize="0.15"が
+        markerParametersへ反映されず、マーカー幅が1単位として扱われるため、
+        実寸をマーカー幅1.0単位に対する比率で指定する。
+        換算：30cm=2.0 / 20cm=1.333333 / 10cm=0.666667 / 5cm=0.333333
+
+        出現・位置・回転・傾きは親要素で分担して管理し、箱自身には持たせない。
+        satellite-spawn    …出現時の拡大（0.85→1、markerFoundで再生、
+                              js/spawn.jsが起点。短い追跡切れでは再生しない）
+        satellite-position …高さと上昇（0.84→0.90。0.90は20度傾けても底面と
+                              カード面の間に約5cm以上の隙間が残る高さ）
+        satellite-spinner  …マーカー面に垂直なY軸まわりの回転（20秒で1周）
+        satellite-tilt     …固定された傾き（アニメーションさせない）
+        particle-effect    …出現時にだけ再生する光の粒子演出。衛星側の
+                              scale/position/rotationの影響を受けないよう、
+                              satellite-spawnとは独立してマーカー直下に置く
+      -->
+      <a-entity id="particle-effect" particle-convergence></a-entity>
+
+      <a-entity
+        id="satellite-spawn"
+        scale="0.85 0.85 0.85"
+        animation="property: scale; from: 0.85 0.85 0.85; to: 1 1 1; dur: 450; easing: easeOutCubic; startEvents: spawnSatellite"
+      >
+        <a-entity
+          id="satellite-position"
+          position="0 0.84 0"
+          animation="property: position; from: 0 0.84 0; to: 0 0.90 0; dur: 550; easing: easeOutCubic; startEvents: riseSatellite"
+        >
+          <a-entity
+            id="satellite-spinner"
+            animation="property: rotation; from: 0 0 0; to: 0 360 0; dur: 20000; easing: linear; loop: true"
+          >
+            <a-entity id="satellite-tilt" rotation="20 0 0">
+              <a-box
+                id="satellite-placeholder"
+                width="2"
+                height="0.666667"
+                depth="1.333333"
+                position="0 0 0"
+                rotation="0 0 0"
+                scale="1 1 1"
+                color="#808080"
+              ></a-box>
+            </a-entity>
+          </a-entity>
+        </a-entity>
+      </a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script src="./js/spawn.js"></script>
+</body>
+</html>
