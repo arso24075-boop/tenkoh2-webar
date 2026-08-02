@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <!-- 展示用UIのセーフエリア(env())を有効にするために追加。カメラ/video/canvas/a-sceneの設定には影響しない -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>診断用：カスタムマーカー最小構成</title>
+  <title>診断用：カメラ画質・ピント改善テスト</title>
   <!-- bodyのみ最小限のリセット。video/canvas/a-sceneへの独自スタイルは一切当てない -->
   <style>
     body {
@@ -41,13 +41,56 @@
   <link rel="stylesheet" href="./css/permission-ui-ja.css">
 </head>
 <body>
-  <!-- debug-hiro.htmlと同じ最小構成で、マーカーだけカスタムパターンに変更 -->
-  <a-scene
-    embedded
-    vr-mode-ui="enabled: false"
-    arjs="sourceType: webcam; debugUIEnabled: false;"
-    device-orientation-permission-ui="enabled: true; deviceMotionMessage: このAR体験では、端末のモーションセンサーへのアクセスが必要です。続けるには使用を許可してください。; allowButtonText: 許可する; denyButtonText: 許可しない; cancelButtonText: キャンセル; mobileDesktopMessage: モバイル表示に切り替えて、ページを再読み込みしてください。; httpsMessage: このAR体験はHTTPSで開いてください。"
-  >
+  <!--
+    AR.js公式の例と同様に、画面の向き（縦/横）に応じてカメラ解像度を切り替えるため、
+    a-sceneの開始タグをここでJavaScriptから動的に出力する（このテストページのみ）。
+    a-sceneが解析される前に属性を確定させる必要があるためdocument.writeを使用する。
+    本番ar.htmlのarjs設定（カメラ解像度）はここでは一切変更していない。
+  -->
+  <script>
+    (function () {
+      var isLandscape = window.innerWidth > window.innerHeight;
+      var sourceWidth = isLandscape ? 1280 : 720;
+      var sourceHeight = isLandscape ? 720 : 1280;
+      var displayWidth = isLandscape ? 1280 : 720;
+      var displayHeight = isLandscape ? 720 : 1280;
+      var canvasWidth = isLandscape ? 960 : 540;
+      var canvasHeight = isLandscape ? 540 : 960;
+
+      // js/camera-quality-test.jsの診断パネルから参照できるよう、
+      // 要求した設定値を保存しておく（実際に取得できた値とは別に表示するため）
+      window.cameraQualityTestRequestedConfig = {
+        sourceWidth: sourceWidth,
+        sourceHeight: sourceHeight,
+        displayWidth: displayWidth,
+        displayHeight: displayHeight,
+        canvasWidth: canvasWidth,
+        canvasHeight: canvasHeight,
+        maxDetectionRate: 30
+      };
+
+      var arjsAttr =
+        'sourceType: webcam; debugUIEnabled: false; ' +
+        'sourceWidth: ' + sourceWidth + '; sourceHeight: ' + sourceHeight + '; ' +
+        'displayWidth: ' + displayWidth + '; displayHeight: ' + displayHeight + '; ' +
+        'canvasWidth: ' + canvasWidth + '; canvasHeight: ' + canvasHeight + '; ' +
+        'maxDetectionRate: 30;';
+
+      var permissionAttr =
+        'enabled: true; ' +
+        'deviceMotionMessage: このAR体験では、端末のモーションセンサーへのアクセスが必要です。続けるには使用を許可してください。; ' +
+        'allowButtonText: 許可する; ' +
+        'denyButtonText: 許可しない; ' +
+        'cancelButtonText: キャンセル; ' +
+        'mobileDesktopMessage: モバイル表示に切り替えて、ページを再読み込みしてください。; ' +
+        'httpsMessage: このAR体験はHTTPSで開いてください。';
+
+      document.write(
+        '<a-scene embedded vr-mode-ui="enabled: false" arjs="' + arjsAttr + '" ' +
+        'device-orientation-permission-ui="' + permissionAttr + '">'
+      );
+    })();
+  </script>
     <a-assets>
       <a-asset-item id="tenkoh2-model-asset" src="./assets/models/tenkoh2.glb"></a-asset-item>
     </a-assets>
@@ -191,30 +234,31 @@
 
   <script src="./js/spawn.js"></script>
   <script src="./js/ar-ui.js"></script>
-  <!-- てんこう2 GLBモデルの表示切り替え（model-loaded/model-error）。ar-model-test.htmlで
-       動作確認済みの処理から、デバッグパネル等のテスト専用部分を除いて移植したもの -->
+  <!-- てんこう2 GLBモデルの表示切り替え（model-loaded/model-error） -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var modelEl = document.querySelector('#satellite-model');
       var errorMessageEl = document.querySelector('#model-error-message');
 
       if (!modelEl) {
-        console.error('ar: #satellite-modelが見つかりません');
+        console.error('ar-camera-quality-test: #satellite-modelが見つかりません');
         return;
       }
 
       modelEl.addEventListener('model-loaded', function () {
         modelEl.setAttribute('visible', 'true');
-        console.log('ar: てんこう2モデルの読み込みに成功しました');
+        console.log('ar-camera-quality-test: てんこう2モデルの読み込みに成功しました');
       });
 
       modelEl.addEventListener('model-error', function (evt) {
-        console.error('ar: てんこう2モデルの読み込みに失敗しました', evt.detail);
+        console.error('ar-camera-quality-test: てんこう2モデルの読み込みに失敗しました', evt.detail);
         if (errorMessageEl) {
           errorMessageEl.style.display = 'block';
         }
       });
     });
   </script>
+  <!-- カメラ画質・連続オートフォーカス確認用スクリプト。このテストページでのみ読み込む -->
+  <script src="./js/camera-quality-test.js"></script>
 </body>
 </html>
