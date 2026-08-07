@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <!-- 展示用UIのセーフエリア(env())を有効にするために追加。カメラ/video/canvas/a-sceneの設定には影響しない -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>診断用：カスタムマーカー最小構成</title>
+  <!-- bodyのみ最小限のリセット。video/canvas/a-sceneへの独自スタイルは一切当てない -->
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    /* GLBモデル読み込み失敗時の小さな通知。既存のARステータス表示（画面下部中央）とは
+       重ならない位置に配置し、AR画面UIのCSS（css/ar-ui.css）は変更しない */
+    #model-error-message {
+      display: none;
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 70px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(120, 20, 20, 0.85);
+      color: #fff;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      z-index: 99999;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+  </style>
+
+  <!-- A-Frame 1.6.0 -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <!-- AR.js 3.4.8（マーカートラッキング版） -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
+  <!-- 展示用AR画面UI（video/canvas/a-sceneには適用しない） -->
+  <link rel="stylesheet" href="./css/ar-ui.css">
+  <!-- デバイスモーションセンサー許可画面（.a-dialog系）の日本語表示用CSS -->
+  <link rel="stylesheet" href="./css/permission-ui-ja.css">
+  <!-- 使い方画像モーダル専用CSS -->
+  <link rel="stylesheet" href="./css/ar-guide.css">
+</head>
+<body>
+  <!-- debug-hiro.htmlと同じ最小構成で、マーカーだけカスタムパターンに変更 -->
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+    device-orientation-permission-ui="enabled: true; deviceMotionMessage: このAR体験では、端末のモーションセンサーへのアクセスが必要です。続けるには使用を許可してください。; allowButtonText: 許可する; denyButtonText: 許可しない; cancelButtonText: キャンセル; mobileDesktopMessage: モバイル表示に切り替えて、ページを再読み込みしてください。; httpsMessage: このAR体験はHTTPSで開いてください。"
+  >
+    <a-assets>
+      <a-asset-item id="tenkoh2-model-asset" src="./assets/models/tenkoh2.glb"></a-asset-item>
+    </a-assets>
+
+    <!-- カスタムマーカー（pattern形式、実寸15cm、patternRatioは0.5で診断） -->
+    <a-marker
+      id="debug-custom-marker"
+      type="pattern"
+      url="./assets/markers/tenkoh2-marker.patt"
+      size="0.15"
+      patternRatio="0.5"
+      emitevents="true"
+    >
+      <!--
+        AR.js 3.4.8のA-Frame実装ではa-markerのsize="0.15"が
+        markerParametersへ反映されず、マーカー幅が1単位として扱われるため、
+        実寸をマーカー幅1.0単位に対する比率で指定する。
+        換算：30cm=2.0 / 20cm=1.333333 / 10cm=0.666667 / 5cm=0.333333
+
+        出現・位置・回転・傾きは親要素で分担して管理し、モデル自身には持たせない。
+        satellite-spawn    …出現時の拡大（0.85→1、markerFoundで再生、
+                              js/spawn.jsが起点。短い追跡切れでは再生しない）
+        satellite-position …高さと上昇（0.84→0.90。0.90は20度傾けても底面と
+                              カード面の間に約5cm以上の隙間が残る高さ）
+        satellite-spinner  …マーカー面に垂直なY軸まわりの回転（20秒で1周）
+        satellite-tilt     …固定された傾き（アニメーションさせない）
+        satellite-model    …てんこう2のGLBモデル（初期visible=falseで
+                              model-loaded後に表示。scaleはBlender実寸30cmを
+                              AR unit 2.0にするため6.666667を使用）
+      -->
+      <a-entity
+        id="satellite-spawn"
+        scale="0.85 0.85 0.85"
+        animation="property: scale; from: 0.85 0.85 0.85; to: 1 1 1; dur: 450; easing: easeOutCubic; startEvents: spawnSatellite"
+      >
+        <a-entity
+          id="satellite-position"
+          position="0 0.84 0"
+          animation="property: position; from: 0 0.84 0; to: 0 0.90 0; dur: 550; easing: easeOutCubic; startEvents: riseSatellite"
+        >
+          <a-entity
+            id="satellite-spinner"
+            animation="property: rotation; from: 0 0 0; to: 0 360 0; dur: 20000; easing: linear; loop: true"
+          >
+            <a-entity id="satellite-tilt" rotation="20 0 0">
+              <a-entity
+                id="satellite-model"
+                gltf-model="#tenkoh2-model-asset"
+                scale="6.666667 6.666667 6.666667"
+                position="0 0 0"
+                rotation="0 0 0"
+                visible="false"
+              ></a-entity>
+            </a-entity>
+          </a-entity>
+        </a-entity>
+      </a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <!--
+    展示用AR画面UI。a-scene/video/canvasの外側に置く通常のHTML要素。
+    #ar-uiはpointer-events:noneで、ボタンやモーダルなど個々の要素だけクリック可能にする。
+  -->
+  <div id="ar-ui">
+    <a
+      id="ar-back-button"
+      class="ar-icon-button ar-icon-button--back"
+      href="./index.html"
+      aria-label="トップ画面へ戻る"
+    >‹ 戻る</a>
+
+    <button
+      type="button"
+      id="ar-help-button"
+      class="ar-icon-button ar-icon-button--help"
+      aria-label="使い方を開く"
+      aria-haspopup="dialog"
+      aria-controls="ar-help-modal"
+    >？</button>
+
+    <div id="ar-status" class="ar-status" aria-live="polite">
+      <p class="ar-status__primary" id="ar-status-primary">ARを準備しています</p>
+      <p class="ar-status__secondary" id="ar-status-secondary">カメラの使用を許可してください</p>
+    </div>
+
+    <!-- 使い方モーダル -->
+    <div
+      id="ar-help-modal"
+      class="ar-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ar-help-title"
+      hidden
+    >
+      <div class="ar-modal__backdrop" id="ar-help-backdrop"></div>
+      <div class="ar-modal__panel">
+        <h2 class="ar-modal__title" id="ar-help-title">使い方</h2>
+        <p class="ar-modal__body ar-modal__body--steps">
+          1. マーカーにスマートフォンのカメラを向ける<br>
+          2. 黒い枠全体が画面に入るよう、スマートフォンの位置を調整する<br>
+          3. 衛星が表示されたら、スマートフォンをゆっくり動かして観察する
+        </p>
+        <p class="ar-modal__note">
+          黒い枠の上に手や物を置かないでください。<br>
+          周囲を確認しながらスマートフォンを動かしてください。
+        </p>
+        <button type="button" class="ar-modal__close" id="ar-help-open-guide-button">画像で使い方を見る</button>
+        <button type="button" class="ar-modal__close" id="ar-help-close">閉じる</button>
+      </div>
+    </div>
+
+    <!-- カメラエラー表示 -->
+    <div
+      id="ar-error"
+      class="ar-modal ar-modal--error"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ar-error-title"
+      hidden
+    >
+      <div class="ar-modal__backdrop"></div>
+      <div class="ar-modal__panel">
+        <h2 class="ar-modal__title" id="ar-error-title">カメラを使用できません</h2>
+        <p class="ar-modal__body">
+          この作品を体験するには、<br>
+          カメラの使用許可が必要です。
+        </p>
+        <p class="ar-modal__body">
+          ブラウザの設定からカメラを許可し、<br>
+          ページを再読み込みしてください。
+        </p>
+        <button type="button" class="ar-modal__close" id="ar-retry-button">もう一度試す</button>
+      </div>
+    </div>
+  </div>
+
+  <!--
+    使い方画像モーダル。#ar-uiの外側に置く独立した全画面オーバーレイ。
+    カメラ起動後（camera-init後）にのみjs/ar-guide.jsが自動表示する。
+  -->
+  <div
+    id="ar-guide-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="てんこう2 WebARの使い方"
+    hidden
+  >
+    <div class="ar-guide-modal__backdrop"></div>
+    <div class="ar-guide-modal__panel">
+      <button
+        type="button"
+        class="ar-guide-modal__close-x"
+        id="ar-guide-close-x"
+        aria-label="閉じる"
+        hidden
+      >×</button>
+      <img
+        class="ar-guide-modal__image"
+        id="ar-guide-image"
+        src="./assets/images/ar-guide.png"
+        alt="てんこう2 WebARの使い方。マーカーにカメラを向け、黒い枠全体を画面に入れ、スマートフォンをゆっくり動かして観察します。"
+      >
+      <div class="ar-guide-modal__fallback" id="ar-guide-fallback" hidden>
+        <h2 class="ar-guide-modal__fallback-title">使い方</h2>
+        <p class="ar-guide-modal__fallback-steps">
+          1. マーカーにカメラを向ける<br>
+          2. 黒い枠全体を画面に入れる<br>
+          3. スマホをゆっくり動かして観察する
+        </p>
+        <p class="ar-guide-modal__fallback-note">
+          うまく表示されない場合は一度カメラをマーカーから外して、もう一度ゆっくり映してください。
+        </p>
+      </div>
+      <button type="button" class="ar-modal__close" id="ar-guide-start-button">はじめる</button>
+    </div>
+  </div>
+
+  <!-- GLBモデル読み込み失敗時の小さな通知（既存のARステータス表示とは別要素） -->
+  <div id="model-error-message">3Dモデルを読み込めませんでした</div>
+
+  <script src="./js/spawn.js"></script>
+  <script src="./js/ar-ui.js"></script>
+  <!-- てんこう2 GLBモデルの表示切り替え（model-loaded/model-error）。ar-model-test.htmlで
+       動作確認済みの処理から、デバッグパネル等のテスト専用部分を除いて移植したもの -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var modelEl = document.querySelector('#satellite-model');
+      var errorMessageEl = document.querySelector('#model-error-message');
+
+      if (!modelEl) {
+        console.error('ar: #satellite-modelが見つかりません');
+        return;
+      }
+
+      modelEl.addEventListener('model-loaded', function () {
+        modelEl.setAttribute('visible', 'true');
+        console.log('ar: てんこう2モデルの読み込みに成功しました');
+      });
+
+      modelEl.addEventListener('model-error', function (evt) {
+        console.error('ar: てんこう2モデルの読み込みに失敗しました', evt.detail);
+        if (errorMessageEl) {
+          errorMessageEl.style.display = 'block';
+        }
+      });
+    });
+  </script>
+  <!-- 画面下部ステータス表示だけを実際の追跡状態へ同期させる（3Dモデル・spawnには触れない） -->
+  <script src="./js/tracking-ui-sync.js"></script>
+  <!-- 使い方画像モーダル制御（camera-init後にのみ自動表示） -->
+  <script src="./js/ar-guide.js"></script>
+</body>
+</html>

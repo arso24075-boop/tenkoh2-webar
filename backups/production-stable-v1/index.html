@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport-fit=coverでiPhoneのセーフエリア（ノッチ/ホームインジケーター）に対応する -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>てんこう2 WebAR</title>
+  <link rel="stylesheet" href="./css/landing.css">
+  <!-- Web起動時のオープニング画面専用CSS（index.htmlのみ） -->
+  <link rel="stylesheet" href="./css/opening-intro.css">
+</head>
+<body>
+  <!--
+    Web起動時のオープニング画面。読み込み直後のフラッシュを防ぐため、
+    JavaScriptで後から生成せず最初からHTMLに記述している。
+    トップ画面はこの下に常に存在し、display:noneにはしない（オープニングを上に重ねるだけ）。
+  -->
+  <div id="opening-intro" aria-label="オープニングメッセージ">
+    <p id="opening-intro-text">
+      <span id="opening-intro-chars" class="opening-intro-chars" aria-hidden="true"></span>
+    </p>
+    <span class="opening-intro-visually-hidden">さあ、未来を実行しよう。</span>
+  </div>
+
+  <!-- AR起動前のトップ画面。A-Frame/AR.js/カメラは一切読み込まない -->
+  <div class="landing">
+    <header class="landing__header">
+      <img
+        class="landing__title-logo"
+        src="./assets/images/tenkoh2-logo.svg"
+        alt="てんこう2"
+      >
+      <p class="landing__subtitle">てんこう2 WebAR</p>
+    </header>
+
+    <p class="landing__description">
+      専用マークをカメラに映すと、<br>
+      実寸大の超小型人工衛星「てんこう2」が出現します。
+    </p>
+
+    <div class="landing__cta">
+      <!-- 単純なページ遷移のみのため、JavaScriptを使わずa要素で./ar.htmlへ移動する -->
+      <!-- ?v=23はSafariのキャッシュ回避用（開発確認用のクエリ） -->
+      <a class="landing__button" href="./ar.html?v=23">ARを起動する</a>
+      <p class="landing__notice">明るい場所で、黒い枠を隠さずに映してください。</p>
+    </div>
+
+    <p class="landing__slogan">さあ、未来を実行しよう。</p>
+
+    <footer class="landing__footer">
+      <img
+        class="landing__logo"
+        src="./assets/images/cosmic-campus-logo.svg"
+        alt="N.U Cosmic Campus"
+      >
+      <img
+        class="landing__logo"
+        src="./assets/images/cst-logo.svg"
+        alt="日本大学理工学部"
+      >
+      <img
+        class="landing__logo"
+        src="./assets/images/art-logo.svg"
+        alt="日本大学芸術学部"
+      >
+    </footer>
+  </div>
+
+  <!-- Web起動時のオープニング画面専用JavaScript（index.htmlのみ） -->
+  <script src="./js/opening-intro.js"></script>
+</body>
+</html>

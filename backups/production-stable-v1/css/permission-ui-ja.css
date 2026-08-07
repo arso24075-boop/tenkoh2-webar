@@ -1,0 +1,60 @@
+/*
+  A-Frame標準のデバイスモーションセンサー許可ダイアログ（device-orientation-permission-ui
+  が生成する .a-dialog 系要素）を日本語表示向けに調整する。
+  対象は .a-dialog / .a-dialog-text-container / .a-dialog-allow-button /
+  .a-dialog-deny-button / .a-dialog-ok-button のみとし、中央配置の仕組み
+  （position:relative; left:50%; top:50%; transform:translate(-50%,-50%);）
+  などレイアウトの骨格は変更しない。
+
+  A-Frame本体がJavaScriptでこれらのクラスに既定のインラインstyleタグを
+  注入しており、詳細度が同じセレクタ同士は読み込み順（カスケード順）に
+  依存してしまう。挿入タイミングに関わらず確実に日本語表示を読みやすく
+  するため、A-Frame既定値と衝突する幅・高さ・配色・文字サイズのみ
+  !importantで上書きする。
+*/
+
+.a-dialog {
+  width: min(320px, calc(100vw - 48px)) !important;
+  height: auto !important;
+  max-height: calc(100vh - 48px) !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+  background-color: rgba(7, 20, 39, 0.96) !important;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif !important;
+  font-size: 15px !important;
+  border-radius: 16px !important;
+  padding: calc(env(safe-area-inset-top, 0px) + 20px) calc(env(safe-area-inset-right, 0px) + 20px)
+    calc(env(safe-area-inset-bottom, 0px) + 20px) calc(env(safe-area-inset-left, 0px) + 20px) !important;
+}
+
+.a-dialog-text-container {
+  color: #fff !important;
+  text-align: center;
+  line-height: 1.8;
+}
+
+.a-dialog-allow-button,
+.a-dialog-deny-button,
+.a-dialog-ok-button {
+  min-height: 44px !important;
+  min-width: 44px !important;
+  height: auto !important;
+  border-radius: 10px !important;
+  font-size: 15px !important;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+}
+
+/* 「許可する」を主要ボタンとして目立たせる */
+.a-dialog-allow-button,
+.a-dialog-ok-button {
+  background-color: #4d6b80 !important;
+  color: #fff;
+}
+
+.a-dialog-deny-button {
+  background-color: rgba(255, 255, 255, 0.18) !important;
+  color: #fff;
+}
