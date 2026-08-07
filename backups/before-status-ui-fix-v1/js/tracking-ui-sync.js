@@ -17,17 +17,11 @@
     }
 
     var LOST_GUIDANCE_DELAY_MS = 5000;
-    // カメラ起動直後の一瞬のノイズ誤検出でhasEverBeenFoundが立ってしまわないよう、
-    // 初回検出だけはこの時間だけvisible=trueが継続することを確認してから確定させる
-    var FIRST_FOUND_CONFIRM_MS = 200;
 
     // ---- このファイルで管理する状態はこの3つだけ ----
     var hasEverBeenFound = false;
     var lostStartedAt = null;
     var currentUiState = 'initial'; // 'initial' | 'tracked' | 'temporarily-lost' | 'long-lost'
-
-    // 初回検出の確認用（hasEverBeenFoundそのものの複製ではなく、確定させる前の一時的な計測にのみ使う）
-    var firstFoundSince = null;
 
     console.log('[tracking-ui] initial');
 
@@ -81,15 +75,9 @@
 
       if (visibleNow) {
         if (!hasEverBeenFound) {
-          // 初回検出だけは、一瞬のノイズ誤検出を除外するため継続時間を確認する
-          if (firstFoundSince === null) {
-            firstFoundSince = performance.now();
-          } else if (performance.now() - firstFoundSince >= FIRST_FOUND_CONFIRM_MS) {
-            firstFoundSince = null;
-            hasEverBeenFound = true;
-            lostStartedAt = null;
-            transitionTo('tracked');
-          }
+          hasEverBeenFound = true;
+          lostStartedAt = null;
+          transitionTo('tracked');
           return;
         }
         if (currentUiState !== 'tracked') {
@@ -100,8 +88,6 @@
       }
 
       // visibleNow === false
-      firstFoundSince = null; // 初回検出待ちが揺らいだ場合は確認をリセットする
-
       if (!hasEverBeenFound) {
         return; // まだ一度も認識していない：初期案内表示のまま何もしない
       }
