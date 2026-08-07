@@ -1,0 +1,127 @@
+/*
+  「使い方」画像モーダル専用CSS。
+  video / canvas / a-scene / css/ar-ui.css には一切影響しない。
+  既存の.ar-modal__close（css/ar-ui.css）のボタン見た目は再利用しつつ、
+  このファイル内のセレクタだけでサイズ・余白を調整する。
+*/
+
+#ar-guide-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60; /* 既存のAR画面UI（#ar-ui:20、.ar-modal:50）より高くする */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: calc(env(safe-area-inset-top, 0px) + 24px) calc(env(safe-area-inset-right, 0px) + 20px)
+    calc(env(safe-area-inset-bottom, 0px) + 24px) calc(env(safe-area-inset-left, 0px) + 20px);
+  pointer-events: auto;
+}
+
+#ar-guide-modal[hidden] {
+  display: none;
+}
+
+.ar-guide-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(1, 13, 34, 0.95);
+}
+
+.ar-guide-modal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+}
+
+.ar-guide-modal__close-x {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ar-guide-modal__close-x[hidden] {
+  display: none;
+}
+
+.ar-guide-modal__close-x:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+.ar-guide-modal__image {
+  display: block;
+  width: min(94vw, 960px);
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto;
+  border-radius: 12px;
+}
+
+.ar-guide-modal__image[hidden] {
+  display: none;
+}
+
+/* 画像読み込み失敗時のフォールバック文章 */
+.ar-guide-modal__fallback {
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(7, 20, 39, 0.92);
+  color: #fff;
+  text-align: center;
+}
+
+.ar-guide-modal__fallback[hidden] {
+  display: none;
+}
+
+.ar-guide-modal__fallback-title {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.ar-guide-modal__fallback-steps {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.9;
+  text-align: left;
+}
+
+.ar-guide-modal__fallback-note {
+  margin: 16px 0 0;
+  font-size: 12px;
+  line-height: 1.8;
+  opacity: 0.85;
+}
+
+/* 「はじめる」ボタン：既存の.ar-modal__close（css/ar-ui.css）の見た目を再利用しつつ、
+   タップ領域とパネル内の余白だけをここで調整する */
+#ar-guide-modal .ar-modal__close {
+  min-height: 48px;
+  width: min(100%, 320px);
+  margin-top: 0;
+}
+
+/* 「？」モーダルへ追加する「画像で使い方を見る」ボタンの余白調整 */
+#ar-help-open-guide-button {
+  margin-top: 12px;
+}

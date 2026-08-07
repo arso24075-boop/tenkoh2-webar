@@ -1,6 +1,7 @@
 // 展示用AR画面のオーバーレイUI制御（カメラ起動ライフサイクル・使い方モーダル）。
-// マーカー追跡状態に応じたステータス表示はjs/tracking-ui-sync.jsが行うため、
-// ここではmarkerFound/markerLostを監視しない（表示の二重管理を避けるため）。
+// マーカー追跡状態に応じたステータス表示・出現演出・モデル表示は
+// js/spawn.jsが一元管理する（状態の重複管理を避けるため、ここでは
+// markerFound/markerLostを監視しない）。
 
 (function () {
   'use strict';
@@ -8,7 +9,6 @@
   document.addEventListener('DOMContentLoaded', function () {
     var sceneEl = document.querySelector('a-scene');
 
-    var backButton = document.querySelector('#ar-back-button');
     var helpButton = document.querySelector('#ar-help-button');
     var helpModal = document.querySelector('#ar-help-modal');
     var helpBackdrop = document.querySelector('#ar-help-backdrop');
@@ -28,11 +28,10 @@
     var CAMERA_STARTUP_TIMEOUT_MS = 12000; // カメラ起動失敗を検出する起動確認タイマー
 
     var cameraStartupTimerId = null;
-
     var cameraReady = false;
     var cameraFailed = false;
 
-    // ---- ステータス表示 ----
+    // ---- ステータス表示（カメラ準備段階のみ。追跡中の表示はjs/spawn.jsが行う） ----
 
     function replayFade(el) {
       el.classList.remove('ar-fade');
